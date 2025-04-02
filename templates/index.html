@@ -1,0 +1,204 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentTorch MCP Server</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .chat-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .user-message {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        .assistant-message {
+            background-color: #e0f7fa;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        .visualization {
+            max-width: 100%;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">AgentTorch MCP Server</h1>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Chat Interface</h5>
+                    </div>
+                    <div class="card-body chat-container" id="chatContainer">
+                        <!-- Chat messages will appear here -->
+                    </div>
+                    <div class="card-footer">
+                        <div class="input-group">
+                            <input type="text" id="messageInput" class="form-control" placeholder="Type your message...">
+                            <button class="btn btn-primary" type="button" id="sendButton">Send</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Add Custom Substep</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="substepDescription" class="form-label">Describe a new behavior:</label>
+                            <textarea class="form-control" id="substepDescription" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="modelType" class="form-label">Model Type:</label>
+                            <select class="form-select" id="modelType">
+                                <option value="predator_prey" selected>Predator-Prey</option>
+                                <option value="bird_behavior">Bird Behavior</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-success" id="addSubstepButton">Add Substep</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chat history
+        let chatHistory = [];
+        
+        // DOM elements
+        const chatContainer = document.getElementById('chatContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const substepDescription = document.getElementById('substepDescription');
+        const modelType = document.getElementById('modelType');
+        const addSubstepButton = document.getElementById('addSubstepButton');
+        
+        // Send message function
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+            
+            // Add user message to chat
+            addMessageToChat('user', message);
+            messageInput.value = '';
+            
+            // Add to history
+            chatHistory.push({role: 'user', content: message});
+            
+            try {
+                // Send to backend
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        messages: chatHistory,
+                    }),
+                });
+                
+                const data = await response.json();
+                
+                // Add assistant response to chat
+                addMessageToChat('assistant', data.response);
+                
+                // Add to history
+                chatHistory.push({role: 'assistant', content: data.response});
+            } catch (error) {
+                console.error('Error:', error);
+                addMessageToChat('assistant', 'Sorry, there was an error processing your request.');
+            }
+        }
+        
+        // Add substep function
+        async function addSubstep() {
+            const description = substepDescription.value.trim();
+            if (!description) return;
+            
+            try {
+                const response = await fetch('/api/simulation/substep', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        description: description,
+                        model_type: modelType.value,
+                    }),
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addMessageToChat('assistant', `Successfully added a new substep: ${description}\n\nThe model now includes this behavior in simulations.`);
+                } else {
+                    addMessageToChat('assistant', `Failed to add substep: ${data.message}`);
+                }
+                
+                substepDescription.value = '';
+            } catch (error) {
+                console.error('Error:', error);
+                addMessageToChat('assistant', 'Sorry, there was an error adding the substep.');
+            }
+        }
+        
+        // Add message to chat
+        function addMessageToChat(role, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = role === 'user' ? 'user-message' : 'assistant-message';
+            
+            // Check for visualization placeholder
+            if (content.includes('[Visualization of simulation results]')) {
+                const parts = content.split('[Visualization of simulation results]');
+                
+                // Create text content
+                const textContent = document.createElement('div');
+                textContent.innerText = parts[0];
+                messageDiv.appendChild(textContent);
+                
+                // Add visualization placeholder
+                const vizPlaceholder = document.createElement('div');
+                vizPlaceholder.innerHTML = '<img src="/static/simulation.gif" class="visualization" alt="Simulation Results"/>';
+                messageDiv.appendChild(vizPlaceholder);
+                
+                // Add any remaining text
+                if (parts[1]) {
+                    const additionalText = document.createElement('div');
+                    additionalText.innerText = parts[1];
+                    messageDiv.appendChild(additionalText);
+                }
+            } else {
+                // Regular text message
+                messageDiv.innerText = content;
+            }
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // Event listeners
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+        addSubstepButton.addEventListener('click', addSubstep);
+        
+        // Welcome message
+        addMessageToChat('assistant', 'Welcome to the AgentTorch MCP Server! You can ask questions about animal behavior like caching birds vs. foraging birds, or request simulations to visualize different ecological scenarios.');
+    </script>
+</body>
+</html>
