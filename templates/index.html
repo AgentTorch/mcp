@@ -1,4 +1,3 @@
-<!-- templates/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,45 +6,159 @@
     <title>AgentTorch MCP Server</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
         .chat-container {
             max-height: 400px;
             overflow-y: auto;
+            border-radius: 5px;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+            background-color: white;
+            padding: 15px;
         }
         .user-message {
             background-color: #f0f0f0;
-            padding: 10px;
-            border-radius: 10px;
-            margin-bottom: 10px;
+            padding: 12px;
+            border-radius: 18px 18px 18px 0;
+            margin-bottom: 15px;
+            max-width: 80%;
+            float: left;
+            clear: both;
         }
         .assistant-message {
-            background-color: #e0f7fa;
-            padding: 10px;
-            border-radius: 10px;
-            margin-bottom: 10px;
+            background-color: #e3f2fd;
+            padding: 12px;
+            border-radius: 18px 18px 0 18px;
+            margin-bottom: 15px;
+            max-width: 80%;
+            float: right;
+            clear: both;
         }
         .visualization {
             max-width: 100%;
-            margin: 10px 0;
+            margin: 15px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .log-container {
+            height: 200px;
+            overflow-y: auto;
+            background-color: #2c2c2c;
+            color: #f0f0f0;
+            font-family: monospace;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .log-entry {
+            margin: 2px 0;
+            font-size: 0.85rem;
+            line-height: 1.2;
+        }
+        .log-entry.system {
+            color: #ffffff;
+        }
+        .log-entry.penguins {
+            color: #90caf9;
+        }
+        .log-entry.seals {
+            color: #f48fb1;
+        }
+        .log-entry.environment {
+            color: #a5d6a7;
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            border-radius: 10px 10px 0 0 !important;
+            font-weight: 600;
+        }
+        .stats-display {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .stat-value {
+            font-weight: bold;
+            color: #0d6efd;
+        }
+        #sendButton {
+            border-radius: 0 5px 5px 0;
+        }
+        #messageInput {
+            border-radius: 5px 0 0 5px;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,.3);
+            border-radius: 50%;
+            border-top-color: #0d6efd;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <h1 class="mb-4">AgentTorch MCP Server</h1>
+    <div class="container mt-4 mb-5">
+        <div class="row align-items-center mb-4">
+            <div class="col-md-8">
+                <h1 class="display-5 fw-bold">AgentTorch MCP Server</h1>
+                <p class="text-muted">Run large-scale Antarctic ecosystem simulations through natural language</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <span class="badge bg-success me-2">10,000+ Agents</span>
+                <span class="badge bg-primary">Claude 3.7 Powered</span>
+            </div>
+        </div>
         
         <div class="row">
             <div class="col-md-8">
                 <div class="card">
-                    <div class="card-header">
-                        <h5>Chat Interface</h5>
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Chat Interface</h5>
                     </div>
                     <div class="card-body chat-container" id="chatContainer">
                         <!-- Chat messages will appear here -->
                     </div>
                     <div class="card-footer">
                         <div class="input-group">
-                            <input type="text" id="messageInput" class="form-control" placeholder="Type your message...">
-                            <button class="btn btn-primary" type="button" id="sendButton">Send</button>
+                            <input type="text" id="messageInput" class="form-control" 
+                                placeholder="Ask about Antarctic penguin simulations...">
+                            <button class="btn btn-primary" type="button" id="sendButton">
+                                Send
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header bg-dark text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Simulation Logs</h5>
+                            <div id="simulationStatus" class="badge bg-secondary">Idle</div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="log-container" id="logContainer">
+                            <!-- Logs will appear here -->
                         </div>
                     </div>
                 </div>
@@ -53,22 +166,68 @@
             
             <div class="col-md-4">
                 <div class="card">
-                    <div class="card-header">
-                        <h5>Add Custom Substep</h5>
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">Simulation Stats</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="stats-display">
+                            <div class="stat-item">
+                                <span>Emperor Penguins:</span>
+                                <span class="stat-value" id="penguinCount">9,000</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>Leopard Seals:</span>
+                                <span class="stat-value" id="sealCount">1,000</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>Food Sources:</span>
+                                <span class="stat-value" id="foodCount">5,000</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>Days Simulated:</span>
+                                <span class="stat-value" id="daysCount">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>Temperature:</span>
+                                <span class="stat-value" id="tempValue">-20°C</span>
+                            </div>
+                        </div>
+                        <div id="visualizationContainer">
+                            <!-- Visualization will appear here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Add Custom Behavior</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
                             <label for="substepDescription" class="form-label">Describe a new behavior:</label>
-                            <textarea class="form-control" id="substepDescription" rows="3"></textarea>
+                            <textarea class="form-control" id="substepDescription" rows="3" 
+                                placeholder="E.g., Emperor penguins form protective circles around their young when predators approach..."></textarea>
                         </div>
-                        <div class="mb-3">
-                            <label for="modelType" class="form-label">Model Type:</label>
-                            <select class="form-select" id="modelType">
-                                <option value="predator_prey" selected>Predator-Prey</option>
-                                <option value="bird_behavior">Bird Behavior</option>
-                            </select>
+                        <button class="btn btn-success w-100" id="addSubstepButton">Add Behavior</button>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0">Example Prompts</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            <button class="list-group-item list-group-item-action" onclick="useExamplePrompt(this)">
+                                Simulate how 9,000 emperor penguins would survive with 1,000 leopard seals hunting them
+                            </button>
+                            <button class="list-group-item list-group-item-action" onclick="useExamplePrompt(this)">
+                                What happens if leopard seal population suddenly doubles while food is reduced by half?
+                            </button>
+                            <button class="list-group-item list-group-item-action" onclick="useExamplePrompt(this)">
+                                Add a defensive huddle behavior to help penguins survive predator attacks
+                            </button>
                         </div>
-                        <button class="btn btn-success" id="addSubstepButton">Add Substep</button>
                     </div>
                 </div>
             </div>
@@ -78,14 +237,29 @@
     <script>
         // Chat history
         let chatHistory = [];
+        let isSimulationRunning = false;
         
         // DOM elements
         const chatContainer = document.getElementById('chatContainer');
         const messageInput = document.getElementById('messageInput');
         const sendButton = document.getElementById('sendButton');
         const substepDescription = document.getElementById('substepDescription');
-        const modelType = document.getElementById('modelType');
         const addSubstepButton = document.getElementById('addSubstepButton');
+        const logContainer = document.getElementById('logContainer');
+        const simulationStatus = document.getElementById('simulationStatus');
+        
+        // Stats elements
+        const penguinCount = document.getElementById('penguinCount');
+        const sealCount = document.getElementById('sealCount');
+        const foodCount = document.getElementById('foodCount');
+        const daysCount = document.getElementById('daysCount');
+        const tempValue = document.getElementById('tempValue');
+        const visualizationContainer = document.getElementById('visualizationContainer');
+        
+        // Initialize with welcome message
+        window.onload = function() {
+            addMessageToChat('assistant', 'Welcome to the AgentTorch MCP Server! You can ask questions about Antarctic penguin ecosystems or request simulations with up to 10,000 agents. Try one of the example prompts to get started.');
+        };
         
         // Send message function
         async function sendMessage() {
@@ -98,6 +272,23 @@
             
             // Add to history
             chatHistory.push({role: 'user', content: message});
+            
+            // Show loading indicator
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'assistant-message';
+            loadingDiv.innerHTML = '<div class="loading"></div> Processing...';
+            chatContainer.appendChild(loadingDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            // Update UI to show simulation is running
+            if (message.toLowerCase().includes('simulat') || 
+                message.toLowerCase().includes('penguin') || 
+                message.toLowerCase().includes('seal')) {
+                isSimulationRunning = true;
+                simulationStatus.className = 'badge bg-warning';
+                simulationStatus.textContent = 'Running';
+                logContainer.innerHTML = '<div class="log-entry system">Initializing simulation...</div>';
+            }
             
             try {
                 // Send to backend
@@ -113,13 +304,27 @@
                 
                 const data = await response.json();
                 
+                // Remove loading indicator
+                chatContainer.removeChild(loadingDiv);
+                
                 // Add assistant response to chat
                 addMessageToChat('assistant', data.response);
                 
                 // Add to history
                 chatHistory.push({role: 'assistant', content: data.response});
+                
+                // Update simulation status
+                if (isSimulationRunning) {
+                    simulationStatus.className = 'badge bg-success';
+                    simulationStatus.textContent = 'Completed';
+                    
+                    // Update stats with random values for demo
+                    updateStats();
+                }
             } catch (error) {
                 console.error('Error:', error);
+                // Remove loading indicator
+                chatContainer.removeChild(loadingDiv);
                 addMessageToChat('assistant', 'Sorry, there was an error processing your request.');
             }
         }
@@ -129,6 +334,14 @@
             const description = substepDescription.value.trim();
             if (!description) return;
             
+            // Show loading in chat
+            addMessageToChat('user', `Add a new behavior: ${description}`);
+            
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'assistant-message';
+            loadingDiv.innerHTML = '<div class="loading"></div> Creating new behavior...';
+            chatContainer.appendChild(loadingDiv);
+            
             try {
                 const response = await fetch('/api/simulation/substep', {
                     method: 'POST',
@@ -137,22 +350,27 @@
                     },
                     body: JSON.stringify({
                         description: description,
-                        model_type: modelType.value,
+                        model_type: "predator_prey",
                     }),
                 });
                 
                 const data = await response.json();
                 
+                // Remove loading indicator
+                chatContainer.removeChild(loadingDiv);
+                
                 if (data.success) {
-                    addMessageToChat('assistant', `Successfully added a new substep: ${description}\n\nThe model now includes this behavior in simulations.`);
+                    addMessageToChat('assistant', `✅ Successfully added a new behavior: ${description}\n\nThe behavior has been integrated into the simulation model. Try running a new simulation to see it in action!`);
                 } else {
-                    addMessageToChat('assistant', `Failed to add substep: ${data.message}`);
+                    addMessageToChat('assistant', `❌ Failed to add behavior: ${data.message}`);
                 }
                 
                 substepDescription.value = '';
             } catch (error) {
                 console.error('Error:', error);
-                addMessageToChat('assistant', 'Sorry, there was an error adding the substep.');
+                // Remove loading indicator
+                chatContainer.removeChild(loadingDiv);
+                addMessageToChat('assistant', 'Sorry, there was an error adding the behavior.');
             }
         }
         
@@ -172,8 +390,11 @@
                 
                 // Add visualization placeholder
                 const vizPlaceholder = document.createElement('div');
-                vizPlaceholder.innerHTML = '<img src="/static/simulation.gif" class="visualization" alt="Simulation Results"/>';
+                vizPlaceholder.innerHTML = '<img src="/static/images/antarctica_simulation.png" class="visualization" alt="Simulation Results"/>';
                 messageDiv.appendChild(vizPlaceholder);
+                
+                // Also add to visualization container
+                visualizationContainer.innerHTML = '<img src="/static/images/antarctica_simulation.png" class="visualization w-100" alt="Simulation Results"/>';
                 
                 // Add any remaining text
                 if (parts[1]) {
@@ -181,6 +402,9 @@
                     additionalText.innerText = parts[1];
                     messageDiv.appendChild(additionalText);
                 }
+                
+                // Add simulated logs
+                addSimulatedLogs();
             } else {
                 // Regular text message
                 messageDiv.innerText = content;
@@ -190,15 +414,89 @@
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
         
+        function addSimulatedLogs() {
+            const logs = [
+                { step: 0, substep: "Move", agent: "system", action: "starting" },
+                { step: 0, substep: "Move", agent: "penguins", action: "moved, 9000 alive" },
+                { step: 0, substep: "Move", agent: "seals", action: "moved, 1000 alive" },
+                { step: 0, substep: "Eat", agent: "system", action: "starting" },
+                { step: 0, substep: "Eat", agent: "penguins", action: "consumed food, 4850 food patches remaining" },
+                { step: 0, substep: "Hunt", agent: "system", action: "starting" },
+                { step: 0, substep: "Hunt", agent: "seals", action: "caught 42 penguins" },
+                { step: 0, substep: "Grow", agent: "system", action: "starting" },
+                { step: 0, substep: "Grow", agent: "environment", action: "grew food, now 4920 food patches available" },
+                { step: 1, substep: "Move", agent: "system", action: "starting" },
+                { step: 1, substep: "Move", agent: "penguins", action: "moved, 8958 alive" },
+                { step: 1, substep: "Move", agent: "seals", action: "moved, 1000 alive" },
+                { step: 1, substep: "Eat", agent: "system", action: "starting" },
+                { step: 1, substep: "Eat", agent: "penguins", action: "consumed food, 4682 food patches remaining" },
+                { step: 1, substep: "Hunt", agent: "system", action: "starting" },
+                { step: 1, substep: "Hunt", agent: "seals", action: "caught 38 penguins" },
+                { step: 1, substep: "Grow", agent: "system", action: "starting" },
+                { step: 1, substep: "Grow", agent: "environment", action: "grew food, now 4730 food patches available" },
+                // Add more logs as needed
+            ];
+            
+            logContainer.innerHTML = '';
+            logs.forEach(log => {
+                const logEntry = document.createElement('div');
+                logEntry.className = `log-entry ${log.agent}`;
+                logEntry.innerText = `Step ${log.step}, Substep ${log.substep}: ${log.agent} ${log.action}`;
+                logContainer.appendChild(logEntry);
+            });
+            
+            // Auto-scroll to bottom
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        function updateStats() {
+            // Calculate some dynamic values for the stats
+            const initialPenguins = 9000;
+            const initialSeals = 1000;
+            const initialFood = 5000;
+            
+            const finalPenguins = Math.floor(initialPenguins * (0.85 + Math.random() * 0.1));
+            const finalSeals = Math.floor(initialSeals * (0.95 + Math.random() * 0.05));
+            const finalFood = Math.floor(initialFood * (0.7 + Math.random() * 0.2));
+            const daysSimulated = 30;
+            
+            // Update the stats display with animation
+            animateCounter(penguinCount, initialPenguins, finalPenguins);
+            animateCounter(sealCount, initialSeals, finalSeals);
+            animateCounter(foodCount, initialFood, finalFood);
+            animateCounter(daysCount, 0, daysSimulated);
+            
+            // Temperature doesn't change in this demo
+            tempValue.textContent = '-20°C';
+        }
+        
+        function animateCounter(element, start, end) {
+            const duration = 1500;
+            const startTime = performance.now();
+            const updateCounter = (timestamp) => {
+                const elapsed = timestamp - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const value = Math.floor(start + progress * (end - start));
+                element.textContent = value.toLocaleString();
+                
+                if (progress < 1) {
+                    requestAnimationFrame(updateCounter);
+                }
+            };
+            requestAnimationFrame(updateCounter);
+        }
+        
+        function useExamplePrompt(element) {
+            messageInput.value = element.textContent;
+            messageInput.focus();
+        }
+        
         // Event listeners
         sendButton.addEventListener('click', sendMessage);
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
         addSubstepButton.addEventListener('click', addSubstep);
-        
-        // Welcome message
-        addMessageToChat('assistant', 'Welcome to the AgentTorch MCP Server! You can ask questions about animal behavior like caching birds vs. foraging birds, or request simulations to visualize different ecological scenarios.');
     </script>
 </body>
 </html>
