@@ -65,7 +65,7 @@ class NLPParser:
         
         try:
             response = self.client.messages.create(
-                model="claude-3-7-sonnet-20240229",
+                model="claude-3-7-sonnet-20250219",
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=1000,
             )

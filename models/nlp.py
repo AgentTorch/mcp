@@ -8,7 +8,7 @@ class Message(BaseModel):
 
 class ChatRequest(BaseModel):
     messages: List[Message]
-    model: Optional[str] = "claude-3-7-sonnet-20240229"
+    model: Optional[str] = "claude-3-7-sonnet-20250219"
     temperature: Optional[float] = 0.7
 
 class SimulationParams(BaseModel):

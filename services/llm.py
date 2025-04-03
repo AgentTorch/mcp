@@ -28,7 +28,7 @@ class LLMService:
                 })()
             })()
             
-        self.default_model = "claude-3-7-sonnet-20240229"
+        self.default_model = "claude-3-7-sonnet-20250219"
     
     async def generate_response(self, message: str, history: List[Dict[str, str]] = None):
         """Generate a response to a user message"""
