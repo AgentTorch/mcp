@@ -2,7 +2,7 @@
 
 A dark-themed interactive web interface for running predator-prey ecosystem simulations using AgentTorch with real-time Claude-like LLM analysis.
 
-![AgentTorch Simulation Interface](/Users/arcaman07/Documents/Opensource/mcp/agent-torch-mcp.png)
+![AgentTorch Simulation Interface](!mcp/agent-torch-mcp.png)
 
 ## Features
 
