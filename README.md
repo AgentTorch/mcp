@@ -1,53 +1,79 @@
-# AgentTorch MCP Server
+# AgentTorch Predator-Prey Simulation with LLM Analysis
 
-A Model-Controlled Process (MCP) server that enables natural language-driven simulations of Antarctic ecosystems with emperor penguins and leopard seals.
+A dark-themed interactive web interface for running predator-prey ecosystem simulations using AgentTorch with real-time Claude-like LLM analysis.
 
-![AgentTorch MCP Screenshot](static/images/antarctica_simulation.png)
+![AgentTorch Simulation Interface](https://example.com/screenshot.png)
 
-## Overview
+## Features
 
-AgentTorch MCP Server provides a web interface for running large-scale agent-based simulations through natural language queries. It uses Claude AI to interpret user requests, extract simulation parameters, and generate analysis of results.
+- **Dark Mode UI**: Easy on the eyes with a modern dark interface
+- **Claude-like Chat Interface**: Interact naturally with the simulation system
+- **Real-time Visualization**: See simulation progress and population dynamics
+- **LLM-powered Analysis**: Get intelligent insights about simulation behavior
+- **Sample Prompts**: Quick-start with pre-written questions and scenarios
 
-Key features:
-- Run simulations with up to 10,000 agents (9,000 emperor penguins and 1,000 leopard seals)
-- Natural language interface using Anthropic's Claude
-- Real-time visualization of population dynamics
-- Detailed simulation logs for tracking ecosystem behavior
-- Add custom behaviors through natural language descriptions
+## Setup
 
-## Requirements
+1. Make sure you have the required Python packages:
+   ```
+   pip install -r requirements.txt
+   ```
 
-- Python 3.9+
-- PyTorch 2.0+
-- FastAPI
-- Anthropic API key
-
-## Installation
-
-1. Clone the repository:
+2. Ensure you have set the ANTHROPIC_API_KEY environment variable:
    ```bash
-   git clone https://github.com/yourusername/agent-torch-mcp.git
-   cd agent-torch-mcp
-Install dependencies:
-bash
-pip install -r requirements.txt
-Set your Anthropic API key:
-bash
-# For Linux/macOS
-export ANTHROPIC_API_KEY=your_anthropic_api_key_here
+   export ANTHROPIC_API_KEY=your_api_key_here
+   ```
 
-# For Windows (Command Prompt)
-set ANTHROPIC_API_KEY=your_anthropic_api_key_here
+3. Verify that the data directory exists at the correct location:
+   ```
+   services/data/18x25/
+   ```
 
-# For Windows (PowerShell)
-$env:ANTHROPIC_API_KEY="your_anthropic_api_key_here"
-Create necessary directories:
-bash
-mkdir -p static/images
-mkdir -p static/css
-Running the Server
+## Running the Server
+
 Start the server with:
-bash
-python app.py
-Visit http://localhost:8000 in your browser to access the web interface.
+```
+python server.py
+```
 
+Then access the interface at http://localhost:8000
+
+## How to Use
+
+1. **Ask a Question**: Type a question in the input box or select a sample prompt
+2. **Run Simulation**: Click "Run Simulation & Analyze" to start the process
+3. **Watch Simulation**: View real-time logs and progress updates
+4. **See Results**: When complete, the population chart will be displayed
+5. **Get Analysis**: The LLM will automatically analyze the results based on your question
+
+## Sample Prompts
+
+The interface includes several sample prompts you can try:
+- What happens to prey population when predators increase?
+- How does the availability of food affect the predator-prey dynamics?
+- What emergent behaviors appear in this ecosystem?
+- Analyze the oscillations in population levels over time
+- What would happen if the nutritional value of grass was doubled?
+
+## Project Structure
+
+```
+├── server.py           # Main FastAPI server
+├── requirements.txt    # Dependencies
+├── static/             # Static CSS files
+│   └── styles.css      # Dark mode styling
+├── templates/          # HTML templates
+│   └── index.html      # Main UI with chat interface
+├── services/           # Service layer
+│   ├── simulation.py   # Simulation service using AgentTorch
+│   ├── llm.py          # LLM service using Claude API
+│   └── data/           # Simulation data files
+│       └── 18x25/      # Grid size specific data files
+```
+
+## Technical Notes
+
+- The simulation uses AgentTorch framework and the provided config.yaml
+- WebSockets enable real-time updates during simulation
+- The UI is designed to work well on both desktop and mobile devices
+- LLM analysis is powered by the Claude API

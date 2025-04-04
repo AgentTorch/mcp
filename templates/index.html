@@ -1,391 +1,96 @@
-<!-- Updated index.html with darker theme -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AgentTorch Neo</title>
+    <title>AgentTorch Predator-Prey Simulation</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        :root {
-            --neo-bg-dark: #1a1a1a;
-            --neo-bg-card: #2a2a2a;
-            --neo-text: #e0e0e0;
-            --neo-accent: #4a7bff;
-            --neo-success: #42b883;
-            --neo-warning: #ff6b6b;
-            --neo-info: #64b5f6;
-        }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--neo-bg-dark);
-            color: var(--neo-text);
-        }
-        
-        .chat-container {
-            max-height: 500px;
-            overflow-y: auto;
-            border-radius: 8px;
-            background-color: var(--neo-bg-card);
-            padding: 15px;
-            scrollbar-width: thin;
-            scrollbar-color: var(--neo-accent) var(--neo-bg-card);
-        }
-        
-        .chat-container::-webkit-scrollbar {
-            width: 6px;
-        }
-        
-        .chat-container::-webkit-scrollbar-thumb {
-            background-color: var(--neo-accent);
-            border-radius: 3px;
-        }
-        
-        .user-message {
-            background-color: #383838;
-            padding: 12px 16px;
-            border-radius: 18px 18px 18px 4px;
-            margin-bottom: 15px;
-            max-width: 85%;
-            float: left;
-            clear: both;
-            color: var(--neo-text);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        
-        .assistant-message {
-            background-color: var(--neo-accent);
-            padding: 12px 16px;
-            border-radius: 18px 18px 4px 18px;
-            margin-bottom: 15px;
-            max-width: 85%;
-            float: right;
-            clear: both;
-            color: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-        
-        .visualization {
-            max-width: 100%;
-            margin: 15px 0;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-        }
-        
-        .log-container {
-            height: 200px;
-            overflow-y: auto;
-            background-color: #1c1c1c;
-            color: #b0b0b0;
-            font-family: monospace;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            border: 1px solid #333;
-            scrollbar-width: thin;
-            scrollbar-color: #555 #1c1c1c;
-        }
-        
-        .log-entry {
-            margin: 2px 0;
-            font-size: 0.85rem;
-            line-height: 1.3;
-        }
-        
-        .log-entry.system {
-            color: #b0b0b0;
-        }
-        
-        .log-entry.penguins {
-            color: var(--neo-info);
-        }
-        
-        .log-entry.seals {
-            color: var(--neo-warning);
-        }
-        
-        .log-entry.environment {
-            color: var(--neo-success);
-        }
-        
-        .card {
-            border: none;
-            border-radius: 10px;
-            background-color: var(--neo-bg-card);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-        
-        .card-header {
-            background-color: rgba(0,0,0,0.2);
-            font-weight: 600;
-            padding: 15px 20px;
-            border-bottom: 1px solid #333;
-        }
-        
-        .stats-display {
-            background-color: #232323;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-        
-        .stat-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            padding: 8px 5px;
-            border-bottom: 1px solid #333;
-        }
-        
-        .stat-value {
-            font-weight: bold;
-            color: var(--neo-accent);
-        }
-        
-        .btn-primary {
-            background-color: var(--neo-accent);
-            border: none;
-        }
-        
-        .btn-success {
-            background-color: var(--neo-success);
-            border: none;
-        }
-        
-        .status-badge {
-            font-size: 0.8rem;
-            padding: 4px 8px;
-            border-radius: 12px;
-        }
-        
-        #messageInput {
-            background-color: #333;
-            border: 1px solid #444;
-            color: white;
-            border-radius: 20px 0 0 20px;
-            padding: 10px 15px;
-        }
-        
-        #messageInput:focus {
-            box-shadow: 0 0 0 0.2rem rgba(74, 123, 255, 0.25);
-            border-color: #444;
-        }
-        
-        #sendButton {
-            border-radius: 0 20px 20px 0;
-            padding: 10px 20px;
-        }
-        
-        .prompt-style-option {
-            margin-bottom: 5px;
-        }
-        
-        .list-group-item {
-            background-color: #333;
-            color: var(--neo-text);
-            border: 1px solid #444;
-        }
-        
-        .list-group-item:hover {
-            background-color: #444;
-            color: white;
-        }
-        
-        .form-control, .form-select {
-            background-color: #333;
-            border: 1px solid #444;
-            color: white;
-        }
-        
-        .form-control:focus, .form-select:focus {
-            background-color: #333;
-            box-shadow: 0 0 0 0.2rem rgba(74, 123, 255, 0.25);
-            color: white;
-        }
-        
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .graph-container {
-            background-color: #232323;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 15px;
-        }
-        
-        .brand-title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-        }
-        
-        .brand-subtitle {
-            font-size: 0.9rem;
-            color: #aaa;
-        }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <div class="container mt-4 mb-5">
-        <div class="row align-items-center mb-4">
-            <div class="col-md-8">
-                <div class="d-flex align-items-center">
-                    <div class="me-3 p-2 rounded bg-dark">
-                        <span class="brand-title">NEO</span>
-                    </div>
-                    <div>
-                        <h1 class="mb-0">AgentTorch Neo</h1>
-                        <p class="brand-subtitle mb-0">Large-scale Antarctic ecosystem simulation interface</p>
+    <div class="header text-center">
+        <h1>AgentTorch Predator-Prey Simulation</h1>
+        <p class="lead">Multi-agent ecosystem simulation with LLM analysis</p>
+    </div>
+    
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Chat-like interface -->
+                <div class="card mb-4">
+                    <div class="card-header">Simulation Conversation</div>
+                    <div class="card-body p-0">
+                        <div id="chat-container" class="chat-container">
+                            <div class="system-message">Start by entering your question or selecting a sample prompt below.</div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-4 text-end">
-                <span class="badge bg-info me-2">30,000+ Agents</span>
-                <span class="badge bg-primary">Claude 3.7 Powered</span>
-            </div>
-        </div>
-        
-        <div class="row">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header text-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Simulation Interface</h5>
-                        <div id="simulationStatus" class="status-badge bg-secondary">Idle</div>
-                    </div>
-                    <div class="card-body chat-container" id="chatContainer">
-                        <!-- Chat messages will appear here -->
-                    </div>
-                    <div class="card-footer">
-                        <div class="input-group">
-                            <input type="text" id="messageInput" class="form-control" 
-                                placeholder="Run a simulation or ask about Antarctic ecosystems...">
-                            <button class="btn btn-primary" type="button" id="sendButton">
-                                <i class="fas fa-paper-plane"></i> Send
+                
+                <!-- Input area -->
+                <div class="card mb-4">
+                    <div class="card-header">Ask about the simulation</div>
+                    <div class="card-body">
+                        <textarea id="prompt-input" class="form-control prompt-input" rows="3" placeholder="What would happen in a predator-prey ecosystem if..."></textarea>
+                        <div class="d-flex justify-content-between mt-3">
+                            <button id="run-button" class="btn btn-primary">
+                                <span>Run Simulation & Analyze</span>
+                                <div id="run-loader" class="loader hidden"></div>
                             </button>
                         </div>
                     </div>
                 </div>
                 
-                <div class="card mt-4">
-                    <div class="card-header text-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Simulation Logs</h5>
-                        <div class="dropdown">
-                            <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" id="logFilterDropdown" data-bs-toggle="dropdown">
-                                Filter
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="logFilterDropdown">
-                                <li><a class="dropdown-item" href="#" data-filter="all">All Logs</a></li>
-                                <li><a class="dropdown-item" href="#" data-filter="system">System</a></li>
-                                <li><a class="dropdown-item" href="#" data-filter="penguins">Penguins</a></li>
-                                <li><a class="dropdown-item" href="#" data-filter="seals">Seals</a></li>
-                                <li><a class="dropdown-item" href="#" data-filter="environment">Environment</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="log-container" id="logContainer">
-                            <!-- Logs will appear here -->
+                <!-- Sample prompts -->
+                <div class="card mb-4">
+                    <div class="card-header">Sample Prompts</div>
+                    <div class="card-body">
+                        <p>Click on any prompt to use it:</p>
+                        <div class="sample-prompts">
+                            <div class="sample-prompt">What happens to prey population when predators increase?</div>
+                            <div class="sample-prompt">How does the availability of food affect the predator-prey dynamics?</div>
+                            <div class="sample-prompt">What emergent behaviors appear in this ecosystem?</div>
+                            <div class="sample-prompt">Analyze the oscillations in population levels over time</div>
+                            <div class="sample-prompt">What would happen if the nutritional value of grass was doubled?</div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <div class="col-md-4">
+            <div class="col-lg-4">
+                <!-- Simulation status -->
+                <div class="card mb-4">
+                    <div class="card-header">Simulation Status</div>
+                    <div class="card-body">
+                        <div id="status-display">
+                            <p class="text-muted">No simulation has been run yet.</p>
+                        </div>
+                        <div class="progress mt-3">
+                            <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Simulation logs -->
+                <div class="card mb-4">
+                    <div class="card-header">Simulation Logs</div>
+                    <div class="card-body p-0">
+                        <div id="log-console" class="log-console">
+                            <p class="text-muted">Simulation logs will appear here...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Population dynamics chart -->
+        <div class="row mt-4">
+            <div class="col-12">
                 <div class="card">
-                    <div class="card-header text-white">
-                        <h5 class="mb-0">Simulation Configuration</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="stats-display">
-                            <div class="stat-item">
-                                <span>Emperor Penguins:</span>
-                                <span class="stat-value" id="penguinCount">25,000</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>Leopard Seals:</span>
-                                <span class="stat-value" id="sealCount">5,000</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>Food Sources:</span>
-                                <span class="stat-value" id="foodCount">12,000</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>Days Simulated:</span>
-                                <span class="stat-value" id="daysCount">0</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>Temperature:</span>
-                                <span class="stat-value" id="tempValue">-20°C</span>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group mt-3">
-                            <label class="form-label">Simulation Mode</label>
-                            <div class="d-flex">
-                                <div class="form-check me-3">
-                                    <input class="form-check-input" type="radio" name="simMode" id="exploratoryMode" checked>
-                                    <label class="form-check-label" for="exploratoryMode">
-                                        Exploratory
-                                    </label>
-                                </div>
-                                <div class="form-check me-3">
-                                    <input class="form-check-input" type="radio" name="simMode" id="counterfactualMode">
-                                    <label class="form-check-label" for="counterfactualMode">
-                                        Counterfactual
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div id="visualizationContainer" class="mt-3">
-                            <!-- Visualization will appear here -->
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="card mt-4">
-                    <div class="card-header text-white">
-                        <h5 class="mb-0">Add Custom Behavior</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label for="substepDescription" class="form-label">Describe a new behavior:</label>
-                            <textarea class="form-control" id="substepDescription" rows="3" 
-                                placeholder="E.g., Emperor penguins form protective circles around their young when predators approach..."></textarea>
-                        </div>
-                        <button class="btn btn-success w-100" id="addSubstepButton">Add Behavior</button>
-                    </div>
-                </div>
-                
-                <div class="card mt-4">
-                    <div class="card-header text-white">
-                        <h5 class="mb-0">Example Scenarios</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="list-group">
-                            <button class="list-group-item list-group-item-action" onclick="useExamplePrompt(this)">
-                                Simulate an epic 100-year evolutionary arms race where 25,000 emperor penguins gradually develop thermal adaptation mechanisms against -60°C blizzards while simultaneously evolving group defensive formations against 5,000 increasingly intelligent leopard seals that have begun coordinated pack hunting behaviors
-                            </button>
-                            <button class="list-group-item list-group-item-action" onclick="useExamplePrompt(this)">
-                                Model the cascading ecological effects when massive underwater volcanic activity near Antarctica suddenly increases ocean temperature by 3°C, causing 30% of ice shelves to collapse while simultaneously creating new upwelling nutrient zones that triple krill populations, affecting both 28,000 emperor penguins and 4,500 leopard seals over 50 simulated years
-                            </button>
-                            <button class="list-group-item list-group-item-action" onclick="useExamplePrompt(this)">
-                                Create a scenario where unusual solar activity causes extreme magnetic disruption affecting 22,000 emperor penguins' navigation abilities during their 100km inland breeding migration, while simultaneously 6,000 leopard seals develop surprising land mobility adaptation allowing limited shore hunting - simulate this unprecedented behavioral shift over 75 breeding seasons
-                            </button>
+                    <div class="card-header">Population Dynamics</div>
+                    <div class="card-body p-0">
+                        <div class="chart-container">
+                            <canvas id="population-chart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -393,320 +98,343 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <script>
-        // Chat history
-        let chatHistory = [];
-        let isSimulationRunning = false;
+        // Global variables
+        let socket;
+        let simChart;
+        let simResults = null;
+        let simLogs = [];
+        let simulationInProgress = false;
         
         // DOM elements
-        const chatContainer = document.getElementById('chatContainer');
-        const messageInput = document.getElementById('messageInput');
-        const sendButton = document.getElementById('sendButton');
-        const substepDescription = document.getElementById('substepDescription');
-        const addSubstepButton = document.getElementById('addSubstepButton');
-        const logContainer = document.getElementById('logContainer');
-        const simulationStatus = document.getElementById('simulationStatus');
+        const runButton = document.getElementById('run-button');
+        const runLoader = document.getElementById('run-loader');
+        const progressBar = document.getElementById('progress-bar');
+        const logConsole = document.getElementById('log-console');
+        const promptInput = document.getElementById('prompt-input');
+        const statusDisplay = document.getElementById('status-display');
+        const populationChart = document.getElementById('population-chart');
+        const chatContainer = document.getElementById('chat-container');
+        const samplePrompts = document.querySelectorAll('.sample-prompt');
         
-        // Stats elements
-        const penguinCount = document.getElementById('penguinCount');
-        const sealCount = document.getElementById('sealCount');
-        const foodCount = document.getElementById('foodCount');
-        const daysCount = document.getElementById('daysCount');
-        const tempValue = document.getElementById('tempValue');
-        const visualizationContainer = document.getElementById('visualizationContainer');
+        // Initialize WebSocket
+        function initializeWebSocket() {
+            // Get the correct WebSocket URL based on current protocol
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws`;
+            
+            console.log(`Connecting to WebSocket at ${wsUrl}`);
+            socket = new WebSocket(wsUrl);
+            
+            socket.onopen = function(e) {
+                console.log('WebSocket connection established');
+                appendLog('Connected to simulation server', 'text-success');
+                enableRunButton();
+            };
+            
+            socket.onmessage = function(event) {
+                const message = JSON.parse(event.data);
+                handleWebSocketMessage(message);
+            };
+            
+            socket.onclose = function(event) {
+                console.log('WebSocket connection closed');
+                appendLog('Connection to server closed. Refresh page to reconnect.', 'text-danger');
+                appendSystemMessage('Connection to server lost. Please refresh the page.');
+                disableRunButton();
+                // Try to reconnect after 5 seconds
+                setTimeout(initializeWebSocket, 5000);
+            };
+            
+            socket.onerror = function(error) {
+                console.error('WebSocket error:', error);
+                appendLog('WebSocket error: ' + error.message, 'text-danger');
+                appendSystemMessage('Error connecting to the simulation server.');
+            };
+        }
         
-        // Initialize with welcome message
-        window.onload = function() {
-            addMessageToChat('assistant', 'Welcome to AgentTorch Neo! I can run large-scale Antarctic ecosystem simulations with up to 30,000 agents. Try one of the example scenarios or create your own simulation query.');
-        };
-        
-        // Send message function
-        async function sendMessage() {
-            const message = messageInput.value.trim();
-            if (!message) return;
+        // Handle incoming WebSocket messages
+        function handleWebSocketMessage(message) {
+            console.log('Received message:', message);
             
-            // Add user message to chat
-            addMessageToChat('user', message);
-            messageInput.value = '';
-            
-            // Add to history
-            chatHistory.push({role: 'user', content: message});
-            
-            // Show loading indicator
-            const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'assistant-message';
-            loadingDiv.innerHTML = '<div class="loading"></div> Processing simulation request...';
-            chatContainer.appendChild(loadingDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-            
-            // Update UI to show simulation is running
-            if (message.toLowerCase().includes('simulat') || 
-                message.toLowerCase().includes('penguin') || 
-                message.toLowerCase().includes('seal') ||
-                message.toLowerCase().includes('antarctic')) {
-                isSimulationRunning = true;
-                simulationStatus.className = 'status-badge bg-warning';
-                simulationStatus.textContent = 'Running';
-                logContainer.innerHTML = '<div class="log-entry system">Initializing simulation with 30,000 agents...</div>';
-                
-                // Add initial system logs
-                console.log("========= AGENT TORCH SIMULATION STARTING =========");
-                console.log(`Time: ${new Date().toISOString()}`);
-                console.log("Initializing AgentTorch runner with 30,000 agents");
-            }
-            
-            try {
-                // Send to backend
-                const response = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        messages: chatHistory,
-                    }),
-                });
-                
-                const data = await response.json();
-                
-                // Remove loading indicator
-                chatContainer.removeChild(loadingDiv);
-                
-                // Check if this is a simulation response with logs
-                let simulationLogs = [];
-                if (isSimulationRunning && data.simulationData) {
-                    simulationLogs = data.simulationData.logs || [];
+            switch(message.type) {
+                case 'simulation_log':
+                    appendLog(message.log);
+                    updateProgressBar(message.progress);
+                    simLogs.push(message.log);
+                    updateStatusDisplay(`Running simulation: ${message.progress}%`);
+                    break;
                     
-                    // Update simulation statistics
-                    if (data.simulationData.results) {
-                        const stats = data.simulationData.results;
-                        const lastStep = stats.step.length - 1;
-                        
-                        if (lastStep >= 0) {
-                            const finalPenguins = stats.prey_alive[lastStep];
-                            const finalSeals = stats.predators_alive[lastStep];
-                            const finalFood = stats.grass_grown[lastStep];
-                            const daysSimulated = stats.step[lastStep] + 1;
-                            
-                            // Update stats display with animation
-                            animateCounter(penguinCount, 25000, finalPenguins);
-                            animateCounter(sealCount, 5000, finalSeals);
-                            animateCounter(foodCount, 10000, finalFood);
-                            animateCounter(daysCount, 0, daysSimulated);
-                        }
-                    }
+                case 'simulation_complete':
+                    // Save simulation results
+                    simResults = message.stats;
+                    console.log("Received simulation results:", simResults);
                     
-                    // Add simulation logs to log container
-                    addDetailedLogs(simulationLogs);
-                }
-                
-                // Add assistant response to chat
-                addMessageToChat('assistant', data.response);
-                
-                // Add to history
-                chatHistory.push({role: 'assistant', content: data.response});
-                
-                // Update simulation status
-                if (isSimulationRunning) {
-                    simulationStatus.className = 'status-badge bg-success';
-                    simulationStatus.textContent = 'Completed';
+                    // Create or update the chart
+                    createPopulationChart(message.chartData);
                     
-                    console.log("========= AGENT TORCH SIMULATION COMPLETED =========");
-                    console.log(`Simulation logs: ${simulationLogs.length} entries`);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                // Remove loading indicator
-                chatContainer.removeChild(loadingDiv);
-                addMessageToChat('assistant', 'Sorry, there was an error processing your request. Please check your API key configuration.');
+                    // Hide run loader
+                    hideRunLoader();
+                    
+                    appendLog('Simulation completed successfully!', 'text-success');
+                    updateStatusDisplay('Simulation completed. Analyzing results...');
+                    
+                    // Now request analysis - this happens automatically
+                    requestAnalysis();
+                    break;
+                    
+                case 'analysis_result':
+                    // Display analysis in the chat
+                    appendAssistantMessage(message.analysis);
+                    
+                    // Reset state
+                    simulationInProgress = false;
+                    enableRunButton();
+                    updateStatusDisplay('Analysis completed.');
+                    break;
+                    
+                case 'error':
+                    appendLog('ERROR: ' + message.message, 'text-danger');
+                    appendSystemMessage('Error: ' + message.message);
+                    hideRunLoader();
+                    enableRunButton();
+                    simulationInProgress = false;
+                    updateStatusDisplay('Error occurred. Please try again.');
+                    break;
+                    
+                default:
+                    console.warn('Unknown message type:', message.type);
             }
         }
         
-        // Add substep function
-        async function addSubstep() {
-            const description = substepDescription.value.trim();
-            if (!description) return;
-            
-            // Show loading in chat
-            addMessageToChat('user', `Add a new behavior: ${description}`);
-            
-            const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'assistant-message';
-            loadingDiv.innerHTML = '<div class="loading"></div> Creating new behavior...';
-            chatContainer.appendChild(loadingDiv);
-            
-            try {
-                const response = await fetch('/api/simulation/substep', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        description: description,
-                        model_type: "predator_prey",
-                    }),
-                });
-                
-                const data = await response.json();
-                
-                // Remove loading indicator
-                chatContainer.removeChild(loadingDiv);
-                
-                if (data.success) {
-                    addMessageToChat('assistant', `✅ Successfully added a new behavior: ${description}\n\nThe behavior has been integrated into the simulation model. Try running a new simulation to see it in action!`);
-                } else {
-                    addMessageToChat('assistant', `❌ Failed to add behavior: ${data.message}`);
-                }
-                
-                substepDescription.value = '';
-            } catch (error) {
-                console.error('Error:', error);
-                // Remove loading indicator
-                chatContainer.removeChild(loadingDiv);
-                addMessageToChat('assistant', 'Sorry, there was an error adding the behavior.');
-            }
+        // UI Control Functions
+        function enableRunButton() {
+            runButton.disabled = false;
+            hideRunLoader();
         }
         
-        // Add message to chat
-        function addMessageToChat(role, content) {
+        function disableRunButton() {
+            runButton.disabled = true;
+            showRunLoader();
+        }
+        
+        function showRunLoader() {
+            runLoader.classList.remove('hidden');
+        }
+        
+        function hideRunLoader() {
+            runLoader.classList.add('hidden');
+        }
+        
+        function updateProgressBar(percentage) {
+            progressBar.style.width = `${percentage}%`;
+            progressBar.setAttribute('aria-valuenow', percentage);
+            progressBar.textContent = `${percentage}%`;
+        }
+        
+        function updateStatusDisplay(message) {
+            statusDisplay.innerHTML = `<p>${message}</p>`;
+        }
+        
+        function clearLogs() {
+            logConsole.innerHTML = '';
+            simLogs = [];
+        }
+        
+        function appendLog(message, className = '') {
+            const logEntry = document.createElement('p');
+            if (className) {
+                logEntry.className = className;
+            }
+            logEntry.textContent = message;
+            logConsole.appendChild(logEntry);
+            
+            // Auto-scroll to the bottom
+            logConsole.scrollTop = logConsole.scrollHeight;
+        }
+        
+        // Chat interface functions
+        function appendUserMessage(message) {
             const messageDiv = document.createElement('div');
-            messageDiv.className = role === 'user' ? 'user-message' : 'assistant-message';
-            
-            // Check for visualization placeholder
-            if (content.includes('[Visualization of simulation results]')) {
-                const parts = content.split('[Visualization of simulation results]');
-                
-                // Create text content
-                const textContent = document.createElement('div');
-                textContent.innerText = parts[0];
-                messageDiv.appendChild(textContent);
-                
-                // Add visualization placeholder
-                const vizPlaceholder = document.createElement('div');
-                vizPlaceholder.innerHTML = '<img src="/static/images/antarctica_simulation.png" class="visualization" alt="Simulation Results"/>';
-                messageDiv.appendChild(vizPlaceholder);
-                
-                // Also add to visualization container
-                visualizationContainer.innerHTML = '<img src="/static/images/antarctica_simulation.png" class="visualization w-100" alt="Simulation Results"/>';
-                
-                // Add any remaining text
-                if (parts[1]) {
-                    const additionalText = document.createElement('div');
-                    additionalText.innerText = parts[1];
-                    messageDiv.appendChild(additionalText);
-                }
-            } else {
-                // Regular text message
-                messageDiv.innerText = content;
-            }
-            
+            messageDiv.className = 'chat-message user-message';
+            messageDiv.textContent = message;
             chatContainer.appendChild(messageDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
         
-        function addDetailedLogs(simulationLogs = []) {
-            // Clear existing logs
-            logContainer.innerHTML = '';
+        function appendAssistantMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message assistant-message';
+            messageDiv.innerHTML = message.replace(/\n/g, '<br>');
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        function appendSystemMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'system-message';
+            messageDiv.textContent = message;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // Chart Creation
+        function createPopulationChart(chartData) {
+            // Configure Chart.js default colors for dark mode
+            Chart.defaults.color = '#e0e0e0';
+            Chart.defaults.borderColor = '#444';
             
-            // If we have actual logs from the simulation, use those
-            if (simulationLogs && simulationLogs.length > 0) {
-                simulationLogs.forEach(logText => {
-                    // Determine the log type based on content
-                    let agentType = 'system';
-                    if (logText.toLowerCase().includes('penguins')) {
-                        agentType = 'penguins';
-                    } else if (logText.toLowerCase().includes('seals')) {
-                        agentType = 'seals';
-                    } else if (logText.toLowerCase().includes('environment') || 
-                               logText.toLowerCase().includes('food')) {
-                        agentType = 'environment';
-                    }
-                    
-                    const logEntry = document.createElement('div');
-                    logEntry.className = `log-entry ${agentType}`;
-                    logEntry.innerText = logText;
-                    logContainer.appendChild(logEntry);
-                });
-            } else {
-                // Add initial system message if no logs
-                const initialLog = document.createElement('div');
-                initialLog.className = 'log-entry system';
-                initialLog.innerText = 'Waiting for simulation logs...';
-                logContainer.appendChild(initialLog);
+            // Destroy existing chart if it exists
+            if (simChart) {
+                simChart.destroy();
             }
             
-            // Auto-scroll to bottom
-            logContainer.scrollTop = logContainer.scrollHeight;
-        }
-        
-        function updateStats() {
-            // More realistic values for 30,000 agent simulation
-            const initialPenguins = 25000;
-            const initialSeals = 5000;
-            const initialFood = 12000;
-            
-            const finalPenguins = 24185;
-            const finalSeals = 4897;
-            const finalFood = 10614;
-            const daysSimulated = 30;
-            
-            // Update the stats display with animation
-            animateCounter(penguinCount, initialPenguins, finalPenguins);
-            animateCounter(sealCount, initialSeals, finalSeals);
-            animateCounter(foodCount, initialFood, finalFood);
-            animateCounter(daysCount, 0, daysSimulated);
-            
-            // Temperature doesn't change in this demo
-            tempValue.textContent = '-20°C';
-        }
-        
-        function animateCounter(element, start, end) {
-            const duration = 1500;
-            const startTime = performance.now();
-            const updateCounter = (timestamp) => {
-                const elapsed = timestamp - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                const value = Math.floor(start + progress * (end - start));
-                element.textContent = value.toLocaleString();
-                
-                if (progress < 1) {
-                    requestAnimationFrame(updateCounter);
-                }
-            };
-            requestAnimationFrame(updateCounter);
-        }
-        
-        function useExamplePrompt(element) {
-            messageInput.value = element.textContent;
-            messageInput.focus();
-        }
-        
-        // Event listeners
-        sendButton.addEventListener('click', sendMessage);
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
-        });
-        addSubstepButton.addEventListener('click', addSubstep);
-        
-        // Filter logs by type
-        document.querySelectorAll('#logFilterDropdown + .dropdown-menu a').forEach(item => {
-            item.addEventListener('click', (e) => {
-                const filter = e.target.getAttribute('data-filter');
-                if (filter === 'all') {
-                    document.querySelectorAll('.log-entry').forEach(log => {
-                        log.style.display = 'block';
-                    });
-                } else {
-                    document.querySelectorAll('.log-entry').forEach(log => {
-                        if (log.classList.contains(filter)) {
-                            log.style.display = 'block';
-                        } else {
-                            log.style.display = 'none';
+            // Create new chart
+            const ctx = populationChart.getContext('2d');
+            simChart = new Chart(ctx, {
+                type: 'line',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Population Count'
+                            },
+                            grid: {
+                                color: '#333'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Simulation Step'
+                            },
+                            grid: {
+                                color: '#333'
+                            }
                         }
-                    });
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: '#e0e0e0'
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: '#252525',
+                            titleColor: '#e0e0e0',
+                            bodyColor: '#e0e0e0',
+                            borderColor: '#444',
+                            borderWidth: 1
+                        }
+                    }
                 }
+            });
+        }
+        
+        // Event Handlers
+        function runSimulation() {
+            const prompt = promptInput.value.trim();
+            
+            if (prompt === '') {
+                alert('Please enter a prompt or select a sample prompt before running the simulation.');
+                return;
+            }
+            
+            if (!socket || socket.readyState !== WebSocket.OPEN) {
+                alert('WebSocket connection not available. Please refresh the page.');
+                return;
+            }
+            
+            if (simulationInProgress) {
+                alert('A simulation is already in progress. Please wait for it to complete.');
+                return;
+            }
+            
+            // Set the simulation in progress flag
+            simulationInProgress = true;
+            
+            // Add user message to chat
+            appendUserMessage(prompt);
+            
+            // Append system message about starting simulation
+            appendSystemMessage('Starting simulation based on your query...');
+            
+            // Clear previous logs and results
+            clearLogs();
+            simResults = null;
+            updateProgressBar(0);
+            
+            // Disable run button and show loader
+            disableRunButton();
+            
+            // Clear previous chart
+            if (simChart) {
+                simChart.destroy();
+                simChart = null;
+            }
+            
+            // Update status
+            updateStatusDisplay('Starting simulation...');
+            
+            // Send run command
+            socket.send(JSON.stringify({
+                command: 'run_simulation',
+                prompt: prompt
+            }));
+            
+            appendLog('Starting simulation...', 'text-info');
+        }
+        
+        function requestAnalysis() {
+            if (!socket || socket.readyState !== WebSocket.OPEN) {
+                alert('WebSocket connection not available. Please refresh the page.');
+                return;
+            }
+            
+            if (!simResults) {
+                alert('No simulation results available. Please run a simulation first.');
+                return;
+            }
+            
+            // Get prompt
+            const prompt = promptInput.value.trim() || 'What patterns do you observe in the predator-prey dynamics?';
+            
+            // Show analyzing message in chat
+            appendSystemMessage('Analyzing simulation results...');
+            
+            console.log("Sending analysis request with results:", simResults);
+            
+            // Send analyze command
+            socket.send(JSON.stringify({
+                command: 'analyze',
+                prompt: prompt,
+                results: simResults,
+                logs: simLogs
+            }));
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Connect to WebSocket
+            initializeWebSocket();
+            
+            // Set up event listeners
+            runButton.addEventListener('click', runSimulation);
+            
+            // Set up sample prompt listeners
+            samplePrompts.forEach(prompt => {
+                prompt.addEventListener('click', function() {
+                    promptInput.value = this.textContent;
+                    promptInput.focus();
+                });
             });
         });
     </script>

@@ -1,30 +1,30 @@
-# Antarctic Ecosystem Simulation Configuration
+# config_vmap.yaml
+# Configuration for the predator-prey model with vectorized substeps.
 
 simulation_metadata:
-  device: 'cpu'  # Change to 'cuda' if GPU available
-  num_episodes: 1
-  num_steps_per_episode: 30
+  device: 'cpu'
+  num_episodes: 3
+  num_steps_per_episode: 20
   num_substeps_per_step: 4
   calibration: false
-  visualize: true
+  visualize: false
 
-  # Antarctica grid size
-  max_x: 100
-  max_y: 100
-  
-  # Penguin and Seal population
-  num_predators: 1000  # Leopard seals
-  num_prey: 9000       # Emperor penguins
-  num_grass: 5000      # Krill/fish patches (food sources)
+  max_x: 18
+  max_y: 25
+  num_predators: 400
+  num_prey: 800
+  num_grass: 450
 
-  # Environmental parameters
-  temperature: -20     # Average temperature in Celsius
-  wind_speed: 30       # Wind speed in km/h
+  predator_coords_file: 'data/18x25/predator-coords.csv'
+  prey_coords_file: 'data/18x25/prey-coords.csv'
+  grass_coords_file: 'data/18x25/grass-coords.csv'
+  grass_growth_stage_file: 'data/18x25/growth-stage.csv'
+  grass_growth_countdown_file: 'data/18x25/growth-countdown.csv'
 
 state:
   environment:
     bounds:
-      name: 'Antarctica Region Bounds'
+      name: 'Bounds'
       learnable: false
       shape: 2
       dtype: 'int'
@@ -34,7 +34,7 @@ state:
       initialization_function: null
 
   agents:
-    predator:  # Leopard Seals
+    predator:
       number: ${simulation_metadata.num_predators}
       properties:
         coordinates:
@@ -45,23 +45,13 @@ state:
             - 2
           dtype: 'int'
           initialization_function:
-            generator: 'random_int'
+            generator: 'read_from_file'
             arguments:
-              lower_limit:
-                name: 'Lower Bound'
+              file_path:
+                name: 'Predator Coordinates File'
                 learnable: false
-                shape:
-                  - 1
-                value: 0
-                initialization_function: null
-              upper_limit:
-                name: 'Upper Bound'
-                learnable: false
-                shape:
-                  - 1
-                value: 
-                  - ${simulation_metadata.max_x}
-                  - ${simulation_metadata.max_y}
+                shape: null
+                value: ${simulation_metadata.predator_coords_file}
                 initialization_function: null
         energy:
           name: 'Energy'
@@ -78,7 +68,7 @@ state:
                 learnable: false
                 shape:
                   - 1
-                value: 50
+                value: 30
                 initialization_function: null
               upper_limit:
                 name: 'Upper Bound'
@@ -95,7 +85,7 @@ state:
           dtype: 'float'
           value: 1
           initialization_function: null
-    prey:  # Emperor Penguins
+    prey:
       number: ${simulation_metadata.num_prey}
       properties:
         coordinates:
@@ -106,23 +96,13 @@ state:
             - 2
           dtype: 'int'
           initialization_function:
-            generator: 'random_int'
+            generator: 'read_from_file'
             arguments:
-              lower_limit:
-                name: 'Lower Bound'
+              file_path:
+                name: 'Prey Coordinates File'
                 learnable: false
-                shape:
-                  - 1
-                value: 0
-                initialization_function: null
-              upper_limit:
-                name: 'Upper Bound'
-                learnable: false
-                shape:
-                  - 1
-                value: 
-                  - ${simulation_metadata.max_x}
-                  - ${simulation_metadata.max_y}
+                shape: null
+                value: ${simulation_metadata.prey_coords_file}
                 initialization_function: null
         energy:
           name: 'Energy'
@@ -166,7 +146,7 @@ state:
           initialization_function: null
 
   objects:
-    grass:  # Krill/Fish
+    grass:
       number: ${simulation_metadata.num_grass}
       properties:
         coordinates:
@@ -177,82 +157,56 @@ state:
             - 2
           dtype: 'int'
           initialization_function:
-            generator: 'random_int'
+            generator: 'read_from_file'
             arguments:
-              lower_limit:
-                name: 'Lower Bound'
+              file_path:
+                name: 'Grass Coordinates File'
                 learnable: false
-                shape:
-                  - 1
-                value: 0
-                initialization_function: null
-              upper_limit:
-                name: 'Upper Bound'
-                learnable: false
-                shape:
-                  - 1
-                value: 
-                  - ${simulation_metadata.max_x}
-                  - ${simulation_metadata.max_y}
+                shape: null
+                value: ${simulation_metadata.grass_coords_file}
                 initialization_function: null
         growth_stage:
-          name: 'The Growth Stage'
+          name: 'The Grass Growth Stage'
           learnable: false
           shape:
             - ${state.objects.grass.number}
             - 1
           dtype: 'int'
           initialization_function:
-            generator: 'random_int'
+            generator: 'read_from_file'
             arguments:
-              lower_limit:
-                name: 'Lower Bound'
+              file_path:
+                name: 'Grass Growth Stage File'
                 learnable: false
-                shape:
-                  - 1
-                value: 0
-                initialization_function: null
-              upper_limit:
-                name: 'Upper Bound'
-                learnable: false
-                shape:
-                  - 1
-                value: 1
+                shape: null
+                value: ${simulation_metadata.grass_growth_stage_file}
                 initialization_function: null
         regrowth_time:
-          name: 'Time for Food to Replenish'
+          name: 'Time for Grass to Regrow Completely'
           learnable: true
           shape:
             - 1
           dtype: 'float'
-          value: 20  # Faster replenishment for demo
+          value: 100 # steps
           initialization_function: null
         growth_countdown:
-          name: 'Time for Food to Grow Fully'
+          name: 'Time for Grass to Grow Fully'
           learnable: false
           shape:
             - ${state.objects.grass.number}
             - 1
           dtype: 'float'
           initialization_function:
-            generator: 'random_float'
+            generator: 'read_from_file'
             arguments:
-              lower_limit:
-                name: 'Lower Bound'
+              file_path:
+                name: 'Grass Growth Countdown File'
                 learnable: false
-                shape:
-                  - 1
-                value: 0
-                initialization_function: null
-              upper_limit:
-                name: 'Upper Bound'
-                learnable: false
-                shape:
-                  - 1
-                value: 20
+                shape: null
+                value: ${simulation_metadata.grass_growth_countdown_file}
                 initialization_function: null
         nutritional_value:
-          name: 'Energy Gained Upon Consuming Food'
+          name: 'Energy Gained Upon Consuming Grass at Max Growth Stage'
           learnable: true
           shape:
             - 1
@@ -263,23 +217,20 @@ state:
   network:
     agent_agent:
       predator_prey:
-        type: 'grid'
-        arguments:
-          shape:
-            - ${simulation_metadata.max_x}
-            - ${simulation_metadata.max_y}
+        type: 'map'
+        arguments: null
 
 substeps:
   '0':
     name: 'Move'
-    description: 'Penguin and Seal Movement'
+    description: 'Moving'
     active_agents:
       - 'predator'
       - 'prey'
     observation:
       predator:
         find_neighbors:
-          generator: 'FindNeighbors'
+          generator: 'FindNeighborsVmap'
           arguments: null
           input_variables:
             bounds: 'environment/bounds'
@@ -289,7 +240,7 @@ substeps:
             - possible_neighbors
       prey:
         find_neighbors:
-          generator: 'FindNeighbors'
+          generator: 'FindNeighborsVmap'
           arguments: null
           input_variables:
             bounds: 'environment/bounds'
@@ -300,7 +251,7 @@ substeps:
     policy:
       predator:
         decide_movement:
-          generator: 'DecideMovement'
+          generator: 'DecideMovementVmap'
           arguments: null
           input_variables:
             positions: 'agents/predator/coordinates'
@@ -309,7 +260,7 @@ substeps:
             - next_positions
       prey:
         decide_movement:
-          generator: 'DecideMovement'
+          generator: 'DecideMovementVmap'
           arguments: null
           input_variables:
             positions: 'agents/prey/coordinates'
@@ -318,7 +269,7 @@ substeps:
             - next_positions
     transition:
       update_positions:
-        generator: 'UpdatePositions'
+        generator: 'UpdatePositionsVmap'
         arguments: null
         input_variables:
           prey_pos: 'agents/prey/coordinates'
@@ -334,7 +285,7 @@ substeps:
           - pred_energy
   '1':
     name: 'Eat'
-    description: 'Penguin Foraging'
+    description: 'Eating Grass'
     active_agents:
       - 'prey'
     observation:
@@ -342,7 +293,7 @@ substeps:
     policy:
       prey:
         find_eatable_grass:
-          generator: 'FindEatableGrass'
+          generator: 'FindEatableGrassVmap'
           arguments: null
           input_variables:
             bounds: 'environment/bounds'
@@ -352,7 +303,7 @@ substeps:
             - eatable_grass_positions
     transition:
       eat_grass:
-        generator: 'EatGrass'
+        generator: 'EatGrassVmap'
         arguments: null
         input_variables:
           energy: 'agents/prey/energy'
@@ -368,7 +319,7 @@ substeps:
           - growth_countdown
   '2':
     name: 'Hunt'
-    description: 'Seal Predation'
+    description: 'Hunting Prey'
     active_agents:
       - 'predator'
     observation:
@@ -376,7 +327,7 @@ substeps:
     policy:
       predator:
         find_targets:
-          generator: 'FindTargets'
+          generator: 'FindTargetsVmap'
           arguments: null
           input_variables:
             prey_pos: 'agents/prey/coordinates'
@@ -385,7 +336,7 @@ substeps:
             - target_positions
     transition:
       hunt_prey:
-        generator: 'HuntPrey'
+        generator: 'HuntPreyVmap'
         arguments: null
         input_variables:
           prey_energy: 'agents/prey/energy'
@@ -398,7 +349,7 @@ substeps:
           - pred_energy
   '3':
     name: 'Grow'
-    description: 'Food Source Replenishment'
+    description: 'Grow Grass'
     active_agents:
       - 'prey'
     observation:
@@ -407,7 +358,7 @@ substeps:
       prey: null
     transition:
       grow_grass:
-        generator: 'GrowGrass'
+        generator: 'GrowGrassVmap'
         arguments: null
         input_variables:
           grass_growth: 'objects/grass/growth_stage'
