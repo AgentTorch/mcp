@@ -11,6 +11,7 @@ import inspect
 import sys
 import logging
 import numpy as np
+import pandas as pd
 
 
 # Configure logging
@@ -87,8 +88,14 @@ class SimulationService:
         count = tensor.sum()
         return int(count.detach().cpu().numpy()) if count.numel() > 1 else int(count.item())
     
-    async def run_simulation(self):
-        """Run a basic predator-prey simulation."""
+    async def run_simulation(self, reload_config=True):
+        """
+        Run a basic predator-prey simulation.
+        
+        Args:
+            reload_config: Whether to reload the config file before running.
+                           Set to True to pick up any config changes.
+        """
         if not AGENTTORCH_AVAILABLE:
             return {"error": "AgentTorch not available"}, []
         
@@ -99,7 +106,9 @@ class SimulationService:
         logger.info(f"Loading configuration from {config_path}")
         
         try:
-            # Read the config file
+            # Always reload the config file to get the latest changes
+            if reload_config:
+                logger.info("Reloading configuration to pick up any changes")
             config = read_config(config_path, register_resolvers=False)
             
             # Set up registry and runner
@@ -189,7 +198,6 @@ def custom_read_from_file(shape, params):
     print(f"Reading file: {file_path}")
     
     if file_path.endswith("csv"):
-        import pandas as pd
         data = pd.read_csv(file_path)
     
     data_values = data.values

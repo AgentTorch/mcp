@@ -1,7 +1,10 @@
 # services/llm.py
 import os
 import logging
-from typing import List, Dict, Any
+import re
+import yaml
+import json
+from typing import List, Dict, Any, Optional, Union
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -38,8 +41,8 @@ class LLMService:
     def _get_mock_response(self, prompt=None):
         """Create a mock response with simulation analysis"""
         # Extract any available statistics from the prompt
-        final_prey = 4  # Default fallback values
-        final_predators = 40
+        final_prey = 10  # Default fallback values
+        final_predators = 400
         
         try:
             if isinstance(prompt, dict) and 'content' in prompt:
@@ -104,7 +107,106 @@ class LLMService:
         except Exception as e:
             logger.error(f"Error generating response: {e}")
             return self._get_mock_response(message)
-    
+
+    async def parse_substep_definition(self, message: str) -> Optional[Dict[str, Any]]:
+        """
+        Parse a user's message to extract substep definitions for the AgentTorch simulation.
+        """
+        logger.info("Parsing message for substep definitions")
+        
+        # Simple keyword check to determine if a substep is mentioned
+        substep_keywords = {
+            'move': ['move', 'movement', 'locomotion', 'travel', 'walk', 'swim', 'position', 'navigate'],
+            'eat': ['eat', 'food', 'feed', 'forage', 'consume', 'nutrition', 'krill', 'algae'],
+            'hunt': ['hunt', 'chase', 'catch', 'predation', 'capture', 'attack', 'pursue', 'seal'],
+            'grow': ['grow', 'regrow', 'grass', 'vegetation', 'regrowth', 'plant', 'growth']
+        }
+        
+        substep_type = None
+        # Check for substep keywords in the message
+        message_lower = message.lower()
+        for step_type, keywords in substep_keywords.items():
+            if any(keyword in message_lower for keyword in keywords):
+                substep_type = step_type
+                break
+                
+        if not substep_type:
+            logger.info("No substep definition found in message")
+            return None
+            
+        # Use LLM to extract structured substep information (if available)
+        if not self.use_mock:
+            try:
+                import anthropic
+                
+                prompt = f"""
+                You are an expert in AgentTorch predator-prey simulations. The user wants to add a '{substep_type}' substep to the simulation.
+                
+                In the Antarctic predator-prey simulation:
+                - Leopard seals are predators
+                - Emperor penguins are prey
+                - Algae/krill (represented as "grass") are food resources
+                
+                Based on the user's message, extract or infer details about the '{substep_type}' substep they want to add.
+                
+                User message: {message}
+                
+                Return a simple JSON object with just these fields:
+                {{
+                  "name": "The name of the substep (like 'Move', 'Eat', 'Hunt', or 'Grow')",
+                  "description": "A brief description of what this substep does"
+                }}
+                """
+                
+                response = self.client.messages.create(
+                    model=self.default_model,
+                    messages=[{"role": "user", "content": prompt}],
+                    max_tokens=500,
+                )
+                
+                # Extract JSON from response
+                text_response = response.content[0].text
+                json_match = re.search(r'```(?:json)?\n(.*?)\n```', text_response, re.DOTALL)
+                json_str = json_match.group(1) if json_match else text_response
+                
+                try:
+                    # Parse the basic substep info
+                    from services.config_modifier import SubstepTemplateManager
+                    
+                    substep_info = json.loads(json_str)
+                    logger.info(f"Successfully extracted substep info: {substep_info}")
+                    
+                    # Get the full template based on the name
+                    template = SubstepTemplateManager.get_template_by_name(substep_info.get('name', substep_type))
+                    
+                    # Update template with extracted info
+                    if 'name' in substep_info:
+                        template['name'] = substep_info['name']
+                    if 'description' in substep_info:
+                        template['description'] = substep_info['description']
+                    
+                    return template
+                    
+                except (json.JSONDecodeError, Exception) as e:
+                    logger.error(f"Error processing LLM response: {e}")
+                    # Fall back to default template
+            except Exception as e:
+                logger.error(f"Error in LLM extraction: {e}")
+        
+        # Fallback: Return default template based on detected substep type
+        from services.config_modifier import SubstepTemplateManager
+        
+        if substep_type == 'move':
+            return SubstepTemplateManager.get_move_template()
+        elif substep_type == 'eat':
+            return SubstepTemplateManager.get_eat_template()
+        elif substep_type == 'hunt':
+            return SubstepTemplateManager.get_hunt_template()
+        elif substep_type == 'grow':
+            return SubstepTemplateManager.get_grow_template()
+        else:
+            return None
+
     async def generate_simulation_response(self, message: str, results: Dict[str, Any],
                                           visualization: str = "", logs: List[str] = None,
                                           history: List[Dict[str, str]] = None):
@@ -126,7 +228,7 @@ class LLMService:
             # Filter interesting logs (up to 5 max to keep prompt shorter)
             interesting_logs = []
             for log in logs[-20:]:  # Get the most recent logs
-                if any(x in str(log).lower() for x in ["prey", "predator", "step", "caught", "completed"]):
+                if any(x in str(log).lower() for x in ["prey", "predator", "step", "caught", "completed", "substep", "parameter"]):
                     interesting_logs.append(log)
             interesting_logs = interesting_logs[-5:]  # Limit to 5 most recent matching logs
             
@@ -135,7 +237,7 @@ class LLMService:
             You are analyzing results from an Antarctic ecosystem simulation with Emperor Penguins and Leopard Seals.
             
             Key simulation results:
-            - Initial populations: 9000 Emperor Penguins, 1000 Leopard Seals
+            - Initial populations: 800 Emperor Penguins, 400 Leopard Seals
             - Final populations: {final_prey} Emperor Penguins, {final_predators} Leopard Seals
             - Food source counts: {final_food}
             - Simulation steps: {steps}
@@ -183,7 +285,7 @@ class LLMService:
             return f"""
             Based on my Antarctic ecosystem simulation, I observed classic predator-prey dynamics.
             
-            The penguin population decreased significantly from 9000 to approximately 4, while the leopard seal population stayed relatively stable at around 40.
+            The penguin population decreased significantly from 800 to approximately {final_prey}, while the leopard seal population stayed relatively stable at around {final_predators}.
             
             This illustrates how predator-prey relationships evolve in harsh environments with limited food resources. The rapid decline in prey population would eventually impact predator numbers in a longer simulation.
             
