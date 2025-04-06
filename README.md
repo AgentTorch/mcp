@@ -1,7 +1,6 @@
-# AgentTorch Predator-Prey Simulation with LLM Analysis
+# Imagine if you could turn an LLM into a simulator
 
-A dark-themed interactive web interface for running predator-prey ecosystem simulations using AgentTorch with real-time Claude-like LLM analysis.
-
+Interface for turning AgentTorch into an MCP server - build, evaluate and analyze simulations.
 ![AgentTorch Simulation Interface](https://github.com/AgentTorch/mcp/blob/mcp-fix/static/images/agent-torch-mcp.png)
 
 ## Features
